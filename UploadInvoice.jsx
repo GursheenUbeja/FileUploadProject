@@ -1,5 +1,8 @@
 
 
+
+
+
 import React from 'react';
 import Dropzone from 'react-dropzone';
 import {Route, Switch,RouteProps } from 'react-router-dom';
@@ -16,6 +19,22 @@ import Popup from 'react-popup';
 import Modal from 'react-modal';
 import  {DateRange}   from 'react-date-range';
 import  DatePicker   from 'react-datepicker';
+import './css/style.css';
+
+
+const buttonStyle = {
+   backgroundColor : 'blue',
+   width : '150px',
+   textAlign: 'center',
+   color : 'white',
+   height :'50px'
+   
+  };
+
+  const backGroundStyle = {
+    backgroundColor : '#00FFFF',
+   };
+
 
 
 class UploadInvoice extends React.Component {
@@ -23,13 +42,15 @@ class UploadInvoice extends React.Component {
         super(props);
         this.state={
                    filesToBeSent:[],
+                   showErrorMessage : false ,
                    editing : false,
                    modalIsOpen : false,
                    name :null,
                    surname : null,
                    address : null,
                    phone : null,
-                   finalComponent : false
+                   finalComponent : false,
+                   secondPage : false
           }
       }
 
@@ -38,6 +59,7 @@ class UploadInvoice extends React.Component {
           var filesToBeSent=this.state.filesToBeSent;
           filesToBeSent.push(acceptedFiles);
           this.setState({filesToBeSent}); 
+      
           this.props.actions.uploadFile(filesToBeSent)
           console.log('filesToBeSent: ', filesToBeSent);
       }
@@ -55,21 +77,29 @@ class UploadInvoice extends React.Component {
 
 
 handleClick(e){
-    e.preventDefault();
-    this.setState({ editing : true});   
+    if (this.state.filesToBeSent!=null && this.state.filesToBeSent.length >0){
+      e.preventDefault();
+      this.setState({ editing : true});
+      this.setState({secondPage : true});
+              }
+          else{ 
+    this.setState({ showErrorMessage : true});
+  }
+    
 }
 
 
 handleSelect(e){
     debugger;
     console.log(e.target.value)
-      this.props.actions.savePaymentDate(e.target.value); 
+    this.props.actions.savePaymentDate(e.target.value);
+  
 }
 
-handleInvoiceAmountSelect(){
+handleInvoiceAmountSelect(e){
     debugger;
     console.log(e.target.value)
-    this.props.actions.invoiceAmount(e.target.value);
+    this.props.actions.saveInvoiceAmount(e.target.value);
 }
 addRecipient(e){
     e.preventDefault();
@@ -82,7 +112,15 @@ closeModal(e) {
   }
 
 createList(){
+    if(!this.props.file){
+        return( <div>
+         Select a file..
+          </div>);
+     }else{
+
+   
     return this.props.file.map((file)=>{
+     
         return(<p
             key={file[0].name}
              >
@@ -91,103 +129,534 @@ createList(){
     });
 }
 
-
+}
 renderForm(){
     
     return (
-<div>
-<div id="divDetails" style={{display:this.state.finalComponent ? 'block' : 'none' }}>
-Name : {this.props.name} 
 
-Address : {this.props.address}
+<div >
 
-Payment Target  : {this.props.paymentDate}
+<div style={backGroundStyle}>
+<table id="divDetails" width="100%">
 
-Invoice Ammount : {this.props.invoiceAmount}
-</div>
-
-
-
-
-    <div>
-            <form>
-                 <label>Invoice Amount : <input type = "text"  
-                  onChange = {(event) => this.handleInvoiceAmountSelect(event)}/></label>
+<tr>
+         <td  width = "20%">
+         <label >Invoice Amount :</label>
+             </td>
+         <td  width = "20%">
+         <label>Payment Date :</label>
+             </td>     
+      <td width = "20%">
+        </td>
+        <td width = "20%">
+        </td>
+          <td width = "20%" textAlign="left">
+          Invoice File:  {this.createList()}
+          
+              </td>
+         </tr>
+         <tr>
+         <td textAlign="left">
+         <input type = "text"  
+                  onChange = {(event) => this.handleInvoiceAmountSelect(event)}/>
                  
-                 <p>Date: <input type="date" id="datepicker" 
-                 onChange = {(event) => this.handleSelect(event)}  /></p>
-
-                <div>Invoice File:  {this.createList()}</div>
-                     <button
-                     onClick={(event) => this.addRecipient(event)}>Add Recipient</button>
+           
+             </td>
+         <td >
+         <input type="date" id="datepicker" 
+                 onChange = {(event) => this.handleSelect(event)}/>
+                 
+             </td>
+      
+      <td width="20%">
+      </td>
+      <td width = "20%">
+        </td>
+      
+     <td textAlign="right">
+     <button style={buttonStyle}
+            onClick={(event) => this.addRecipient(event)}>Add Recipient</button>
                   
-            </form>
+          </td>
+          
+         </tr>
+     </table>
+</div> 
+
+<table id="divDetails" style={{display:this.state.finalComponent ? 'block' : 'none' }}>
+  <tr>
+      <td>
+      Name :
+          </td>
+          <td>
+          {this.props.name} {this.props.surname}
+              </td>
+ </tr>
+
+ <tr>
+      <td>
+      Address :
+          </td>
+          <td>
+          {this.props.address} 
+              </td>
+ </tr>
+
+
+ <tr>
+      <td>
+      Payment Target  :
+          </td>
+          <td>
+          {this.props.paymentDate} 
+              </td>
+ </tr>
+
+
+ <tr>
+      <td>
+      Invoice Ammount :
+          </td>
+          <td>
+          {this.props.invoiceAmount} 
+              </td>
+ </tr>
+
+</table>
+    
 <div>
 
-<Modal
+<Modal style={{width : '40%', height : '30%'}}
           isOpen={this.state.modalIsOpen}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
         >
  <h2 ref={subtitle => this.subtitle = subtitle}>Add Recipient</h2>
-          <button onClick={(event) => this.closeModal(event)}>close</button>
+        
           <div>Add Recipient</div>
-          <form  action="#" onSubmit={(event)=>this.saveDetails(event)}>
-                <label>Name : <input type = "text"  value={this.state.name} /></label>
-                <label>Surname :<input type = "text" value={this.state.surname} /></label>
-                <label>Address : <input type = "text" value={this.state.address} /></label>
-                <label>Phone : <input type = "text" value={this.state.phone} /></label>
-                <input type="submit" value="Submit" />
-          </form>
-        </Modal>
+          <form style={{width : '40%', height : '30%'}}  action="#" onSubmit={(event)=>this.saveDetails(event)}>
+<table>
+         <tr>
+         <td>
+          <label>Name :</label>
+          </td>
+           <td>
+           <input type = "text"  value={this.state.name} />
+        </td>
+        </tr>
+        <tr>
+         <td>
+          <label>Surname :</label>
+          </td>
+           <td>
+           <input type = "text"  value={this.state.surname} />
+        </td>
+        </tr>
+        <tr>
+         <td>
+          <label>Address :</label>
+          </td>
+           <td>
+           <input type = "text"  value={this.state.address} />
+        </td>
+        </tr>
+  
+        <tr>
+         <td>
+          <label>Phone :</label>
+          </td>
+           <td>
+           <input type = "number"  maxLength="10" value={this.state.phone} />
+        </td>
+        </tr>
+<tr>
+    <td>
+    <input type="submit" value="Ok" />
+        </td>
+        <td>
+        <button onClick={(event) => this.closeModal(event)}>close</button>
+            </td>
+    </tr>
 
+</table>
+   
+    </form>
+</Modal>
 
 </div>
-<div className="App">
-                 <Dropzone     
+<div width="100%" >
+
+
+      
+<div  style={{ paddingTop :  '15px' }} >
+    </div>
+     <div style={backGroundStyle}  >
+              <table width="100%"> 
+                  <tr height="10%">
+                      </tr>
+
+<tr>
+<div style={{display:this.state.finalComponent ? 'block' : 'none' }}>
+        
+        <table  style ={{backgroundColor : 'BlueViolet', width : '100%'}}>
+            <tr>
+             
+                <td>
+                <label>Additional Files : </label>
+                 </td>
+                <td>
+                <label>Description : </label>
+                </td>
+        <td>
+            </td>
+            <td>
+                
+            <button >Add</button>   
+                </td>
+                </tr>
+                <tr>
+                <td>
+                <label> sometimepass.png</label>
+                 </td>
+                <td>
+               <textarea></textarea> 
+                </td>
+        <td>
+            </td>
+            <td>
+                
+            <button >Remove</button>   
+                </td>
+                    </tr>
+            </table>
+        
+               
+                
+          
+        
+        
+                <button >Remove</button>
+        
+                </div>
+        
+    </tr>
+                      <tr height="40%">
+                      <Dropzone     
                  style={{
-                     width: '100px',
+                     width: '100%',
                      height: '100px',
                      borderWidth: '2px',
-                     borderColor: 'rgb(100, 102, 102)',
+                     backgroundColor: 'Aquamarine',
                      borderStyle: 'dashed',
-                     borderRadius: '5px',
-                     padding: '20px',
+                     borderRadius: '5px'
+                     
                    }}
 
                  onDrop={(files) => this.onDrop(files)}>
-                     <div>Upload your invoice.</div>
+                     <h1 style={{textAlign: 'center',fontStyle : 'bold italic', fontFamily : 'Times New Roman'  }}>Drag Additional Files...</h1>
                  </Dropzone>
-            </div>
+                      </tr>
+                      <tr height="10%" style={{textAlign:'right' }}>
+                      <button style={buttonStyle} >Proceed</button>
+                      </tr>
+                  </table>
+                
+                 </div>
         </div>
-    </div>      
+
+
+        <div>
+       
+     </div>
+</div>
+
+   
     );
 }
+
+
+renderFinalForm(){
+    
+    return (
+
+<div >
+
+<div style={backGroundStyle}>
+<table id="divDetails" width="100%" style={{display:this.state.secondPage ? 'block' : 'none' }}>
+
+<tr>
+         <td>
+         <label >Invoice Amount :</label>
+             </td>
+         <td >
+         <label>Payment Date :</label>
+             </td>     
+      <td width="63%">
+        </td>
+          
+          <td style ={{fontStyle: 'bold italic'}}>
+          Receipt Info
+          </td>
+         </tr>
+         <tr>
+         <td textAlign="left">
+         <input type = "text"  
+                  onChange = {(event) => this.handleInvoiceAmountSelect(event)}/>
+                 
+           
+             </td>
+         <td >
+         <input type="date" id="datepicker" 
+                 onChange = {(event) => this.handleSelect(event)}/>
+                 
+             </td>
+      
+      <td>
+      </td>
+          
+     
+     <td >
+    <label style={{fontStyle:'bold italic'}}> Full name:  </label> {this.props.name} {this.props.surname}
+        
+          </td>
+          
+         </tr>
+         <tr>
+             <td>
+             Invoice File:   
+                 </td>
+                 <td textAlign="left">
+                 {this.createList()} 
+                     </td>
+                     
+                         <td>
+                             </td>
+                             <td >
+                             Address: {this.props.address} 
+     
+                                 </td>
+             </tr>
+             <tr>
+                 <td>
+                     Additional Info
+                  </td>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td>
+                <button style={buttonStyle}
+            onClick={(event) => this.addRecipient(event)}>Add Recipient</button>
+                </td>
+                
+                 </tr>
+     </table>
+</div> 
+
+
+<div>
+
+<Modal style={{width : '40%', height : '30%'}}
+          isOpen={this.state.modalIsOpen}
+          onRequestClose={this.closeModal}
+          contentLabel="Example Modal"
+        >
+ <h2 ref={subtitle => this.subtitle = subtitle}>Add Recipient</h2>
+        
+          <div>Add Recipient</div>
+          <form style={{width : '40%', height : '30%'}}  action="#" onSubmit={(event)=>this.saveDetails(event)}>
+<table>
+         <tr>
+         <td>
+          <label>Name :</label>
+          </td>
+           <td>
+           <input type = "text"  value={this.state.name} />
+        </td>
+        </tr>
+        <tr>
+         <td>
+          <label>Surname :</label>
+          </td>
+           <td>
+           <input type = "text"  value={this.state.surname} />
+        </td>
+        </tr>
+        <tr>
+         <td>
+          <label>Address :</label>
+          </td>
+           <td>
+           <input type = "text"  value={this.state.address} />
+        </td>
+        </tr>
+  
+        <tr>
+         <td>
+          <label>Phone :</label>
+          </td>
+           <td>
+           <input type = "number"  maxLength="10" value={this.state.phone} />
+        </td>
+        </tr>
+<tr>
+    <td>
+    <input type="submit" value="Ok" />
+        </td>
+        <td>
+        <button onClick={(event) => this.closeModal(event)}>close</button>
+            </td>
+    </tr>
+
+</table>
+   
+    </form>
+</Modal>
+
+</div>
+<div width="100%" >
+
+
+      
+<div  style={{ paddingTop :  '15px' }} >
+    </div>
+     <div style={backGroundStyle}  >
+              <table width="100%"> 
+                  <tr height="10%">
+                      </tr>
+
+<tr>
+<div>
+        
+        <table  style ={{backgroundColor : 'BlueViolet', width : '100%'}}>
+            <tr>
+             
+                <td>
+                <label>Additional Files : </label>
+                 </td>
+                <td>
+                <label>Description : </label>
+                </td>
+        <td>
+            </td>
+            <td>
+                
+            <button >Add</button>   
+                </td>
+                </tr>
+                <tr>
+                <td>
+                <label> sometimepass.png</label>
+                 </td>
+                <td>
+               <textarea></textarea> 
+                </td>
+        <td>
+            </td>
+            <td>
+                
+            <button >Remove</button>   
+                </td>
+                    </tr>
+            </table>
+        
+               
+                
+          
+        
+        
+                <button >Remove</button>
+        
+                </div>
+        
+    </tr>
+                      <tr height="40%">
+                      <Dropzone     
+                 style={{
+                     width: '100%',
+                     height: '100px',
+                     borderWidth: '2px',
+                     backgroundColor: 'Aquamarine',
+                     borderStyle: 'dashed',
+                     borderRadius: '5px'
+                     
+                   }}
+
+                 onDrop={(files) => this.onDrop(files)}>
+                     <h1 style={{textAlign: 'center',fontStyle : 'bold italic', fontFamily : 'Times New Roman'  }}>Drag Additional Files...</h1>
+                 </Dropzone>
+                      </tr>
+                      <tr height="10%" style={{textAlign:'right' }}>
+                      <button style={buttonStyle} >Proceed</button>
+                      </tr>
+                  </table>
+                
+                 </div>
+        </div>
+
+
+        <div>
+       
+     </div>
+</div>
+
+   
+    );
+}
+
 
 
 renderFileUpload(){
     return (
         <div>
-           <div className="App">
+           <div  style={{
+                    
+                    width:'800px',
+                     margin:'0 auto' ,
+                    
+                  }}>
+
+                <div>
+                    <p style={{display:this.state.showErrorMessage   ? 'block' : 'none' }}> <label style={{color:'red'}} > Please select file to upload first..</label> </p>
+                     <button 
+                      style={{
+                    
+                        width: '550px',
+                        height: '100px',
+                        color : 'rgb(66, 185, 70)',
+                        backgroundColor : '#FFC107',
+                        borderWidth: '2px',
+                        borderColor: 'rgb(100, 102, 102)',
+                        borderStyle: 'dashed',
+                        borderRadius: '5px',
+                        padding: '20px',
+                      }}
+                     onClick={(event) => this.handleClick(event)}>Upload Invoice</button>
+                  </div >
+                  <br />
+                <div> 
+
+                    
+                </div>
                  <Dropzone     
                  style={{
-                     width: '100px',
-                     height: '100px',
+                    width: '500px',
+                    height: '100px',
+                   textAlign: 'center',
+                   backgroundColor : 'cream',
                      borderWidth: '2px',
                      borderColor: 'rgb(100, 102, 102)',
                      borderStyle: 'dashed',
+                     textShadow : '1px 1px 2px grey',
                      borderRadius: '5px',
-                     padding: '20px',
+                     padding: '20px'
                    }}
 
                  onDrop={(files) => this.onDrop(files)}>
-                     <div>Upload your invoice.</div>
+                     <div>Drag your files here...</div>
                  </Dropzone>
 
-                 <div>
-                     <button
-                     onClick={(event) => this.handleClick(event)}>Upload Invoice</button>
-                  </div>
+                
              </div>
                
         </div>
@@ -197,9 +666,13 @@ renderFileUpload(){
 }
     
 
+
 render() {
      
-        if(this.state.editing){
+    if(this.state.finalComponent){
+       return this.renderFinalForm();
+    }
+      else  if(this.state.editing){
                 return this.renderForm();
             }else{
                 return this.renderFileUpload();
@@ -229,6 +702,7 @@ const mapStateToProps = (state,props) => {
             savePhone : savePhone,
             saveAddress: saveAddress,
             saveSurname : saveSurname,
+            saveInvoiceAmount: saveInvoiceAmount,
             savePaymentDate : savePaymentDate
             },dispatch)
             
@@ -237,3 +711,4 @@ const mapStateToProps = (state,props) => {
 
 
 export default connect(mapStateToProps , mapDispatchToProps)(UploadInvoice);
+
