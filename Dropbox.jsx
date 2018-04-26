@@ -1,8 +1,4 @@
 
-
-
-
-
 import React from 'react';
 import Dropzone from 'react-dropzone';
 import {Route, Switch,RouteProps } from 'react-router-dom';
@@ -19,7 +15,7 @@ import Popup from 'react-popup';
 import Modal from 'react-modal';
 import  {DateRange}   from 'react-date-range';
 import  DatePicker   from 'react-datepicker';
-import './css/style.css';
+
 
 
 const buttonStyle = {
